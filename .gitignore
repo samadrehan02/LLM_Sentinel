@@ -1,104 +1,320 @@
+# ============================================================
 # Python
+# ============================================================
+
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *$py.class
-*.so
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Packaging
+# Python build / packaging
 build/
 dist/
+*.egg
 *.egg-info/
 .eggs/
+pip-wheel-metadata/
 
-# Testing
+# Python coverage / testing
 .pytest_cache/
 .coverage
 .coverage.*
 htmlcov/
 .tox/
 .nox/
+.hypothesis/
 
 # Type checking
 .mypy_cache/
 .pyre/
 .pytype/
 
-# Linting / formatting
+# Linters / formatters
 .ruff_cache/
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
 
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
+# ============================================================
+# Virtual Environments
+# ============================================================
 
-# Environment variables / secrets
+.venv/
+venv/
+env/
+ENV/
+.ENV/
+env.bak/
+venv.bak/
+
+
+# ============================================================
+# Environment Variables / Secrets
+# ============================================================
+
 .env
 .env.*
 !.env.example
 
+*.secret
+*.secrets
+secrets/
+credentials/
+credentials.json
+secrets.json
+
+# Certificates / private keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+
+# ============================================================
+# IDEs / Editors
+# ============================================================
+
+.vscode/
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+
+# VS Code local history
+.history/
+
+
+# ============================================================
+# Operating System
+# ============================================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+
+# ============================================================
 # Logs
+# ============================================================
+
 *.log
 logs/
+log/
 
-# Local databases
+
+# ============================================================
+# Databases
+# ============================================================
+
 *.db
 *.sqlite
 *.sqlite3
 
-# Model files and local inference artifacts
+
+# ============================================================
+# Local Model Files
+# ============================================================
+
+# Downloaded models
 models/
+model/
 checkpoints/
+
+# Hugging Face cache
+.huggingface/
+.cache/huggingface/
+
+# Model weights
 *.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
 *.gguf
 *.gguf.part
-*.bin
 
-# Experiment outputs
+# Quantization / inference artifacts
+*.gguf
+*.ggml
+
+
+# ============================================================
+# LLM / ML Caches
+# ============================================================
+
+.cache/
+cache/
+
+# ML experiment caches
+wandb/
+mlruns/
+runs/
+
+# TensorBoard
+tensorboard/
+logs/
+
+
+# ============================================================
+# Experiments / Benchmark Outputs
+# ============================================================
+
 experiments/results/
 experiments/runs/
-benchmarks/results/
+experiments/output/
+experiments/outputs/
 
-# Generated reports
+benchmarks/results/
+benchmarks/output/
+benchmarks/outputs/
+
+# Generated evaluation data
+evaluation_results/
+evaluation_outputs/
+
+# Large generated datasets
+*.parquet
+*.arrow
+
+
+# ============================================================
+# Generated Reports
+# ============================================================
+
 reports/
+report/
 *.html
 *.jsonl
 
-# Application runtime data
-data/
+
+# ============================================================
+# Temporary Files
+# ============================================================
+
 tmp/
 temp/
+.tmp/
+*.tmp
+*.temp
 
+
+# ============================================================
+# Jupyter
+# ============================================================
+
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+
+# ============================================================
 # Docker
+# ============================================================
+
 docker-compose.override.yml
 
+
+# ============================================================
 # Terraform
+# ============================================================
+
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
 
-# Jupyter
-.ipynb_checkpoints/
+# Terraform lock file is intentionally NOT ignored.
+# .terraform.lock.hcl should normally be committed.
 
-# Secrets / credentials
-*.pem
-*.key
-*.crt
-credentials.json
-secrets.json
 
-# Local configuration
+# ============================================================
+# OS / Runtime Generated Files
+# ============================================================
+
+*.pid
+*.pid.lock
+
+
+# ============================================================
+# Local Configuration
+# ============================================================
+
 config.local.*
 settings.local.*
+*.local.yaml
+*.local.yml
+*.local.json
+
+
+# ============================================================
+# Security Testing Artifacts
+# ============================================================
+
+captures/
+pcaps/
+*.pcap
+*.pcapng
+
+security-results/
+scan-results/
+
+
+# ============================================================
+# Generated API / Application Data
+# ============================================================
+
+uploads/
+downloads/
+generated/
+artifacts/
+
+
+# ============================================================
+# Node / Dashboard
+# ============================================================
+
+# In case the dashboard uses Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.npm/
+.yarn/
+.pnpm-store/
+
+
+# ============================================================
+# Local Infrastructure Data
+# ============================================================
+
+postgres_data/
+qdrant_data/
+redis_data/
+
+docker-data/
+volumes/
+
+
+# ============================================================
+# Secrets accidentally generated by tooling
+# ============================================================
+
+*.token
+*.tokens
+*.apikey
+*.apikeys
+*.password
+*.passwords
