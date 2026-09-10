@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Linting / formatting
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Model files and local inference artifacts
+models/
+checkpoints/
+*.safetensors
+*.gguf
+*.gguf.part
+*.bin
+
+# Experiment outputs
+experiments/results/
+experiments/runs/
+benchmarks/results/
+
+# Generated reports
+reports/
+*.html
+*.jsonl
+
+# Application runtime data
+data/
+tmp/
+temp/
+
+# Docker
+docker-compose.override.yml
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets / credentials
+*.pem
+*.key
+*.crt
+credentials.json
+secrets.json
+
+# Local configuration
+config.local.*
+settings.local.*
