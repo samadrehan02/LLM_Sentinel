@@ -41,6 +41,7 @@ class EvaluationRunner:
         self,
         attack: Attack,
         evaluation_id: UUID | None = None,
+        campaign_id: UUID | None = None,
     ) -> EvaluationRunResult:
         evaluation_id = evaluation_id or uuid4()
         run_id = uuid4()
@@ -61,6 +62,7 @@ class EvaluationRunner:
 
         record = Evaluation(
             evaluation_id=evaluation_id,
+            campaign_id=campaign_id,
             attack_id=attack_id,
             attack_category=attack_category,
             target="enterprise-assistant",

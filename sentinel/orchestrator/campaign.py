@@ -1,8 +1,9 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sentinel.attacks.registry import AttackRegistry
 from sentinel.defenses.policy import Policy
 from sentinel.evaluators.base import Evaluator
+from sentinel.infrastructure.evaluation_store import EvaluationStore
 from sentinel.instrumentation.event_bus import EventBus
 from sentinel.models.campaign import Campaign
 from sentinel.models.runtime import ModelRuntime
@@ -21,6 +22,7 @@ class CampaignRunner:
         policy: Policy,
         event_bus: EventBus,
         attack_registry: AttackRegistry,
+        evaluation_store: EvaluationStore | None = None,
     ) -> None:
         self.attack_registry = attack_registry
 
@@ -30,15 +32,13 @@ class CampaignRunner:
             evaluator=evaluator,
             policy=policy,
             event_bus=event_bus,
+            evaluation_store=evaluation_store,
         )
 
     async def run(
         self,
         campaign: Campaign,
-        evaluation_id: UUID | None = None,
     ) -> CampaignResult:
-        evaluation_id = evaluation_id or uuid4()
-
         results = []
 
         for attack_id in campaign.attack_ids:
@@ -46,7 +46,7 @@ class CampaignRunner:
 
             result = await self.evaluation_runner.run(
                 attack=attack,
-                evaluation_id=evaluation_id,
+                campaign_id=campaign.campaign_id,
             )
 
             results.append(result)
