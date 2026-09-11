@@ -37,22 +37,18 @@ async def get_session(
         yield session
 
 
-async def create_tables(
-    engine: AsyncEngine,
-) -> None:
-    await engine.run_sync(
-        Base.metadata.create_all,
-    )
+async def create_tables(engine: AsyncEngine) -> None:
+    async with engine.begin() as connection:
+        await connection.run_sync(
+            Base.metadata.create_all,
+        )
 
 
-async def drop_tables(
-    engine: AsyncEngine,
-) -> None:
-    await engine.run_sync(
-        Base.metadata.drop_all,
-    )
+async def drop_tables(engine: AsyncEngine) -> None:
+    async with engine.begin() as connection:
+        await connection.run_sync(
+            Base.metadata.drop_all,
+        )
 
 
-# Import models after Base is defined so that all ORM tables
-# are registered with Base.metadata.
 from sentinel.infrastructure import evaluation_model, event_model  # noqa: E402, F401

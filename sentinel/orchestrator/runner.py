@@ -9,6 +9,7 @@ from sentinel.evaluators.result import (
     EvaluationStatus,
     EvaluationType,
 )
+from sentinel.infrastructure.evaluation_store import EvaluationStore
 from sentinel.instrumentation.event_bus import EventBus
 from sentinel.instrumentation.events import Event, EventType
 from sentinel.models.evaluation import Evaluation
@@ -27,12 +28,14 @@ class EvaluationRunner:
         evaluator: Evaluator,
         policy: Policy,
         event_bus: EventBus,
+        evaluation_store: EvaluationStore | None = None,
     ) -> None:
         self.model_runtime = model_runtime
         self.target = target
         self.evaluator = evaluator
         self.policy = policy
         self.event_bus = event_bus
+        self.evaluation_store = evaluation_store
 
     async def run(
         self,
@@ -62,6 +65,9 @@ class EvaluationRunner:
             attack_category=attack_category,
             target="enterprise-assistant",
         )
+
+        if self.evaluation_store is not None:
+            await self.evaluation_store.save(record)
 
         instrumented_runtime = InstrumentedModelRuntime(
             runtime=self.model_runtime,
@@ -167,6 +173,9 @@ class EvaluationRunner:
         record.status = result.status
         record.score = result.score
         record.completed_at = datetime.now(UTC)
+
+        if self.evaluation_store is not None:
+            await self.evaluation_store.save(record)
 
         await self.event_bus.publish(
             Event(
