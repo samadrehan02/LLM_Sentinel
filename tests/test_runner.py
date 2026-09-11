@@ -11,6 +11,7 @@ from sentinel.orchestrator.runner import EvaluationRunner
 from target.agent.mock import MockTarget
 from sentinel.instrumentation.store import InMemoryEventStore
 from sentinel.attacks.prompt_injection.direct import DirectPromptInjectionAttack
+from sentinel.attacks.prompt_injection.adaptive import AdaptivePromptInjectionAttack
 
 class SuccessfulAttack(Attack):
     attack_id = "TEST-SUCCESS"
@@ -218,3 +219,102 @@ async def test_evaluation_runner_passes_attack_result_to_evaluator() -> None:
         "prompt_injection"
     )
     assert result.evaluation.metadata["attack_severity"] == "critical"
+
+@pytest.mark.asyncio
+async def test_runner_executes_adaptive_prompt_injection() -> None:
+    attack = AdaptivePromptInjectionAttack()
+
+    runner = EvaluationRunner(
+        model_runtime=MockModelRuntime(
+            response="Mock target response",
+        ),
+        target=MockTarget(),
+        evaluator=SimpleEvaluator(),
+        policy=BasicToolPolicy(
+            allowed_tools={"search_documents"},
+        ),
+        event_bus=EventBus(),
+    )
+
+    result = await runner.run(attack)
+
+    assert result.evaluation.status == EvaluationStatus.SUCCESS
+    assert result.evaluation.score == 1.0
+
+    assert result.finding is not None
+    assert result.finding.attack_id == "PI-002"
+
+    assert result.record is not None
+    assert result.record.attack_id == "PI-002"
+    assert result.record.status.value == "success"
+    assert result.record.score == 1.0
+    assert result.record.completed_at is not None
+
+@pytest.mark.asyncio
+async def test_runner_adaptive_attack_emits_expected_events() -> None:
+    event_bus = EventBus()
+    events = []
+
+    def capture_event(event):
+        events.append(event)
+
+    event_bus.subscribe(
+        EventType.EVALUATION_STARTED,
+        capture_event,
+    )
+    event_bus.subscribe(
+        EventType.ATTACK_STARTED,
+        capture_event,
+    )
+    event_bus.subscribe(
+        EventType.AGENT_REQUEST,
+        capture_event,
+    )
+    event_bus.subscribe(
+        EventType.LLM_GENERATION,
+        capture_event,
+    )
+    event_bus.subscribe(
+        EventType.ATTACK_EVALUATED,
+        capture_event,
+    )
+    event_bus.subscribe(
+        EventType.FINDING_CREATED,
+        capture_event,
+    )
+
+    runner = EvaluationRunner(
+        model_runtime=MockModelRuntime(
+            response="Mock target response",
+        ),
+        target=MockTarget(),
+        evaluator=SimpleEvaluator(),
+        policy=BasicToolPolicy(
+            allowed_tools={"search_documents"},
+        ),
+        event_bus=event_bus,
+    )
+
+    result = await runner.run(
+        AdaptivePromptInjectionAttack(),
+    )
+
+    assert result.evaluation.status == EvaluationStatus.SUCCESS
+
+    assert len(events) == 8
+
+    assert events[0].event_type == EventType.EVALUATION_STARTED
+    assert events[1].event_type == EventType.ATTACK_STARTED
+    assert events[2].event_type == EventType.AGENT_REQUEST
+    assert events[3].event_type == EventType.LLM_GENERATION
+    assert events[4].event_type == EventType.AGENT_REQUEST
+    assert events[5].event_type == EventType.LLM_GENERATION
+    assert events[6].event_type == EventType.ATTACK_EVALUATED
+    assert events[7].event_type == EventType.FINDING_CREATED
+
+    evaluation_id = result.record.evaluation_id
+
+    assert all(
+        event.evaluation_id == evaluation_id
+        for event in events
+    )

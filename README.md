@@ -16,9 +16,11 @@ The current implementation provides the core evaluation pipeline, telemetry infr
 Current test status:
 
 ```text
-83 passed
+159 passed
 0 failed
 ````
+
+The current development milestone has established a tested adaptive attack framework, structured attack outcomes, controller-based execution, and runner-level integration. The suite currently contains 159 passing tests.
 
 The next development phase focuses on expanding attack coverage, implementing quantitative security metrics, integrating local LLM inference, and adding RAG, MCP, and adaptive attack scenarios.
 
@@ -59,6 +61,28 @@ The next development phase focuses on expanding attack coverage, implementing qu
 
 The architecture separates attack generation, target execution, runtime defenses, model execution, evaluation, and scoring so that each component can be extended independently.
 
+The current adaptive attack path is:
+
+```text
+Adaptive Attack
+      |
+      v
+AdaptiveAttackController
+      |
+      v
+AttackObservation[]
+      |
+      v
+AttackOutcome
+      |
+      v
+AttackResult
+      |
+      v
+EvaluationRunner -> Evaluator -> Finding
+```
+
+
 ## Core Capabilities
 
 ### Attack Execution
@@ -69,6 +93,7 @@ Current attacks include:
 
 * Direct prompt injection
 * Benign baseline prompts
+* Adaptive prompt injection
 
 Planned attack classes include:
 
@@ -81,7 +106,6 @@ Planned attack classes include:
 * MCP security attacks
 * Memory and context poisoning
 * Multi-step attack chains
-* Adaptive attacks
 
 ### Target Agent
 
@@ -96,6 +120,7 @@ The target currently supports:
 * Synthetic customer data
 * Runtime prompt-injection defenses
 * Instrumented execution
+* Deterministic mock target support
 
 All security testing data is synthetic and isolated from real systems.
 
@@ -161,9 +186,9 @@ Attacks are evaluated based on their actual impact rather than simply whether an
 The current evaluation system supports:
 
 * Attack success/failure
+* Structured attack outcomes
 * Evidence collection
 * Evaluation metadata
-* Sensitive data exposure detection
 * Security findings
 * Severity classification
 
@@ -453,6 +478,9 @@ Tests currently cover:
 * Database configuration
 * PostgreSQL event persistence
 * PostgreSQL integration and round-trip behavior
+* Adaptive attack state and controller
+* Adaptive prompt injection execution
+* Structured attack outcomes
 
 The target agent and attack framework are intentionally deterministic in unit tests. Model variability will be introduced during the experimental benchmarking stage.
 
@@ -492,8 +520,8 @@ The target agent and attack framework are intentionally deterministic in unit te
 * [ ] RAG poisoning
 * [ ] MCP security testing
 * [ ] Memory/context poisoning
-* [ ] Multi-step attack chains
-* [ ] Adaptive attack orchestration
+* [x] Multi-step attack controller foundation
+* [x] Adaptive attack orchestration foundation
 
 ### Phase 3: Local LLM Infrastructure
 
