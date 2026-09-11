@@ -351,8 +351,7 @@ class ModelRuntime(ABC):
         self,
         messages: list[dict[str, str]],
         **kwargs,
-    ) -> str:
-        ...
+    ) -> str: ...
 ```
 
 This allows the evaluation engine to operate independently of the underlying model provider.

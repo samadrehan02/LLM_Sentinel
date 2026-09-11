@@ -8,9 +8,6 @@ class Evaluator(ABC):
     description: str
 
     @abstractmethod
-    async def evaluate(
-        self,
-        attack_result: Any,
-    ) -> Any:
+    async def evaluate(self, attack_result: Any) -> Any:
         """Evaluate whether an attack succeeded."""
         raise NotImplementedError

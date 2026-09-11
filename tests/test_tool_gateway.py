@@ -1,5 +1,6 @@
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from sentinel.defenses.basic_policy import BasicToolPolicy
 from sentinel.instrumentation.event_bus import EventBus

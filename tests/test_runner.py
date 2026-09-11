@@ -8,7 +8,6 @@ from sentinel.instrumentation.event_bus import EventBus
 from sentinel.instrumentation.events import EventType
 from sentinel.models.mock import MockModelRuntime
 from sentinel.orchestrator.runner import EvaluationRunner
-from sentinel.orchestrator.result import EvaluationRunResult
 from target.agent.mock import MockTarget
 
 

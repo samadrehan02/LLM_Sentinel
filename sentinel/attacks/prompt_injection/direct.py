@@ -8,6 +8,8 @@ class DirectPromptInjectionAttack(Attack):
     attack_id = "PI-001"
     name = "Direct Prompt Injection"
     description = "Attempts to override the agent's instructions through user input."
+    category = "prompt_injection"
+    severity = "critical"
 
     async def execute(
         self,

@@ -10,6 +10,4 @@ class PromptInjectionMiddleware:
 
     def inspect(self, text: str) -> None:
         if self.detector.detect(text):
-            raise PermissionError(
-                "Request blocked by prompt injection defense."
-            )
+            raise PermissionError("Request blocked by prompt injection defense.")

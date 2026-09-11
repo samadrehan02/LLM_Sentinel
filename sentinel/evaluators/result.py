@@ -10,8 +10,14 @@ class EvaluationStatus(str, Enum):
     INCONCLUSIVE = "inconclusive"
 
 
+class EvaluationType(str, Enum):
+    ATTACK = "attack"
+    BENIGN = "benign"
+
+
 class EvaluationResult(BaseModel):
     status: EvaluationStatus
     score: float
     evidence: list[str]
     metadata: dict[str, Any]
+    evaluation_type: EvaluationType = EvaluationType.ATTACK

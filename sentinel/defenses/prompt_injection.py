@@ -23,7 +23,4 @@ class PromptInjectionDetector:
         ]
 
     def detect(self, text: str) -> bool:
-        return any(
-            pattern.search(text)
-            for pattern in self.patterns
-        )
+        return any(pattern.search(text) for pattern in self.patterns)

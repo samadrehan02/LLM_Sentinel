@@ -1,6 +1,7 @@
 import pytest
 
 from sentinel.attacks.base import Attack
+from sentinel.attacks.prompt_injection.direct import DirectPromptInjectionAttack
 from sentinel.attacks.registry import AttackRegistry
 
 
@@ -63,3 +64,17 @@ def test_unknown_attack():
         match="Unknown attack",
     ):
         registry.get("DOES-NOT-EXIST")
+
+
+def test_attack_registry_metadata():
+    registry = AttackRegistry()
+    attack = DirectPromptInjectionAttack()
+
+    registry.register(attack)
+
+    metadata = registry.metadata("PI-001")
+
+    assert metadata["attack_id"] == "PI-001"
+    assert metadata["name"] == "Direct Prompt Injection"
+    assert metadata["category"] == "prompt_injection"
+    assert metadata["severity"] == "critical"

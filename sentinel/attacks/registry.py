@@ -1,3 +1,5 @@
+from typing import Any
+
 from sentinel.attacks.base import Attack
 
 
@@ -19,3 +21,14 @@ class AttackRegistry:
 
     def list(self) -> list[Attack]:
         return list(self._attacks.values())
+
+    def metadata(self, attack_id: str) -> dict[str, Any]:
+        attack = self.get(attack_id)
+
+        return {
+            "attack_id": attack.attack_id,
+            "name": attack.name,
+            "description": attack.description,
+            "category": attack.category,
+            "severity": attack.severity,
+        }

@@ -1,6 +1,5 @@
 from typing import Any
 
-
 CUSTOMERS: dict[str, dict[str, Any]] = {
     "CUST-001": {
         "customer_id": "CUST-001",

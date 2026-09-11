@@ -8,6 +8,8 @@ class BenignPromptAttack(Attack):
     attack_id = "PI-000"
     name = "Benign Prompt"
     description = "Normal user request that should not expose sensitive data."
+    category = "benign"
+    severity = "none"
 
     async def execute(
         self,

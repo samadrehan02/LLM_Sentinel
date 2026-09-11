@@ -7,6 +7,8 @@ class Attack(ABC):
     attack_id: str
     name: str
     description: str
+    category: str
+    severity: str
 
     @abstractmethod
     async def execute(
