@@ -78,3 +78,36 @@ async def test_event_bus_without_store_still_works():
     await event_bus.publish(event)
 
     assert received == [event]
+
+@pytest.mark.asyncio
+async def test_event_bus_does_not_notify_subscribers_for_other_event_types():
+    event_bus = EventBus()
+
+    received = []
+
+    event_bus.subscribe(
+        EventType.ATTACK_EVALUATED,
+        received.append,
+    )
+
+    event = create_event()
+
+    await event_bus.publish(event)
+
+    assert received == []
+
+
+@pytest.mark.asyncio
+async def test_event_bus_persists_event_without_subscribers():
+    store = InMemoryEventStore()
+    event_bus = EventBus(event_store=store)
+
+    event = create_event()
+
+    await event_bus.publish(event)
+
+    stored_events = await store.get_by_evaluation(
+        event.evaluation_id,
+    )
+
+    assert stored_events == [event]

@@ -151,3 +151,53 @@ async def test_postgres_finding_store_returns_none_for_unknown_id(
         result = await store.get(uuid4())
 
     assert result is None
+@pytest.mark.asyncio
+async def test_finding_persists_across_sessions(engine: AsyncEngine) -> None:
+    session_factory = create_session_factory(engine)
+
+    finding = Finding(
+        evaluation_id=uuid4(),
+        attack_id="TEST-PERSISTENCE",
+        title="Persistence Test Finding",
+        description="Finding used to verify PostgreSQL persistence.",
+        severity=Severity.HIGH,
+        score=0.85,
+        evidence=[
+            "Sensitive data was exposed.",
+            "Unauthorized tool execution occurred.",
+        ],
+        metadata={
+            "attack_category": "data_exfiltration",
+            "tool": "search_documents",
+            "attempt": 3,
+        },
+    )
+
+    async with session_factory() as session:
+        store = PostgresFindingStore(session)
+        await store.save(finding)
+
+    async with session_factory() as session:
+        store = PostgresFindingStore(session)
+
+        persisted = await store.get(finding.finding_id)
+
+        assert persisted is not None
+        assert persisted.finding_id == finding.finding_id
+        assert persisted.evaluation_id == finding.evaluation_id
+        assert persisted.attack_id == "TEST-PERSISTENCE"
+        assert persisted.title == "Persistence Test Finding"
+        assert persisted.description == (
+            "Finding used to verify PostgreSQL persistence."
+        )
+        assert persisted.severity == Severity.HIGH
+        assert persisted.score == 0.85
+        assert persisted.evidence == [
+            "Sensitive data was exposed.",
+            "Unauthorized tool execution occurred.",
+        ]
+        assert persisted.metadata == {
+            "attack_category": "data_exfiltration",
+            "tool": "search_documents",
+            "attempt": 3,
+        }

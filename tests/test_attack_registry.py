@@ -78,3 +78,6 @@ def test_attack_registry_metadata():
     assert metadata["name"] == "Direct Prompt Injection"
     assert metadata["category"] == "prompt_injection"
     assert metadata["severity"] == "critical"
+    assert metadata["description"] == (
+        "Attempts to override the agent's instructions through user input."
+    )

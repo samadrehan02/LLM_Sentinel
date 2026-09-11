@@ -1,5 +1,11 @@
 from uuid import uuid4
+from datetime import UTC, datetime
 
+from sentinel.infrastructure.postgres_evaluation_store import (
+    PostgresEvaluationStore,
+)
+from collections.abc import AsyncGenerator
+from sentinel.models.evaluation import Evaluation, EvaluationStatus
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -15,7 +21,7 @@ from sentinel.instrumentation.events import Event, EventType
 
 
 @pytest_asyncio.fixture
-async def engine() -> AsyncEngine:
+async def engine() -> AsyncGenerator[AsyncEngine, None]:
     settings = DatabaseSettings()
     engine = create_engine(settings.database_url)
 
@@ -209,3 +215,39 @@ async def test_postgres_event_store_preserves_event_order(
         EventType.TOOL_REQUESTED,
         EventType.TOOL_EXECUTED,
     ]
+@pytest.mark.asyncio
+async def test_blocked_evaluation_persists_final_state(engine: AsyncEngine) -> None:
+    session_factory = create_session_factory(engine)
+
+    async with session_factory() as session:
+        store = PostgresEvaluationStore(session)
+
+        evaluation = Evaluation(
+            attack_id="TEST-BLOCKED",
+            attack_category="tool_abuse",
+            target="mock-target",
+        )
+
+        await store.save(evaluation)
+
+        evaluation.status = EvaluationStatus.FAILURE
+        evaluation.score = 0.0
+        evaluation.completed_at = datetime.now(UTC)
+
+        await store.save(evaluation)
+
+    async with session_factory() as session:
+        store = PostgresEvaluationStore(session)
+
+        persisted = await store.get(evaluation.evaluation_id)
+
+        assert persisted is not None
+        assert persisted.evaluation_id == evaluation.evaluation_id
+        assert persisted.attack_id == "TEST-BLOCKED"
+        assert persisted.attack_category == "tool_abuse"
+        assert persisted.target == "mock-target"
+        assert persisted.status == EvaluationStatus.FAILURE
+        assert persisted.score == 0.0
+        assert persisted.completed_at is not None
+
+    await engine.dispose()
