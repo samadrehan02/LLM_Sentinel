@@ -36,9 +36,11 @@ class ToolGateway:
         tool = self.tools.get(tool_name)
 
         if tool is None:
-            raise ValueError(f"Unknown tool: {tool_name}")
+            raise ValueError(
+                f"Unknown tool: {tool_name}"
+            )
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=self.evaluation_id,
                 run_id=self.run_id,
@@ -60,7 +62,7 @@ class ToolGateway:
             )
         )
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=self.evaluation_id,
                 run_id=self.run_id,
@@ -77,11 +79,13 @@ class ToolGateway:
         )
 
         if policy_result.decision != PolicyDecision.ALLOW:
-            raise PermissionError(f"Tool execution denied: {policy_result.reason}")
+            raise PermissionError(
+                f"Tool execution denied: {policy_result.reason}"
+            )
 
         result = await tool.execute(arguments)
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=self.evaluation_id,
                 run_id=self.run_id,

@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 
 from sentinel.instrumentation.event_bus import EventBus
@@ -16,15 +17,16 @@ def create_event() -> Event:
     )
 
 
-def test_event_bus_persists_events():
+@pytest.mark.asyncio
+async def test_event_bus_persists_events():
     store = InMemoryEventStore()
     event_bus = EventBus(event_store=store)
 
     event = create_event()
 
-    event_bus.publish(event)
+    await event_bus.publish(event)
 
-    stored_events = store.get_by_evaluation(
+    stored_events = await store.get_by_evaluation(
         event.evaluation_id,
     )
 
@@ -32,7 +34,8 @@ def test_event_bus_persists_events():
     assert stored_events[0] == event
 
 
-def test_event_bus_notifies_subscribers_and_persists():
+@pytest.mark.asyncio
+async def test_event_bus_notifies_subscribers_and_persists():
     store = InMemoryEventStore()
     event_bus = EventBus(event_store=store)
 
@@ -48,18 +51,19 @@ def test_event_bus_notifies_subscribers_and_persists():
 
     event = create_event()
 
-    event_bus.publish(event)
+    await event_bus.publish(event)
 
     assert received == [event]
 
-    stored_events = store.get_by_evaluation(
+    stored_events = await store.get_by_evaluation(
         event.evaluation_id,
     )
 
     assert stored_events == [event]
 
 
-def test_event_bus_without_store_still_works():
+@pytest.mark.asyncio
+async def test_event_bus_without_store_still_works():
     event_bus = EventBus()
 
     received = []
@@ -71,6 +75,6 @@ def test_event_bus_without_store_still_works():
 
     event = create_event()
 
-    event_bus.publish(event)
+    await event_bus.publish(event)
 
     assert received == [event]

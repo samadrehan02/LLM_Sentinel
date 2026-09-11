@@ -62,7 +62,7 @@ class EvaluationRunner:
             trace_id=trace_id,
         )
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=evaluation_id,
                 run_id=run_id,
@@ -77,7 +77,7 @@ class EvaluationRunner:
             )
         )
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=evaluation_id,
                 run_id=run_id,
@@ -121,7 +121,7 @@ class EvaluationRunner:
             )
 
         except PermissionError as exc:
-            self.event_bus.publish(
+            await self.event_bus.publish(
                 Event(
                     evaluation_id=evaluation_id,
                     run_id=run_id,
@@ -155,7 +155,7 @@ class EvaluationRunner:
                 evaluation_type=EvaluationType.ATTACK,
             )
 
-        self.event_bus.publish(
+        await self.event_bus.publish(
             Event(
                 evaluation_id=evaluation_id,
                 run_id=run_id,
@@ -181,7 +181,7 @@ class EvaluationRunner:
         )
 
         if finding is not None:
-            self.event_bus.publish(
+            await self.event_bus.publish(
                 Event(
                     evaluation_id=evaluation_id,
                     run_id=run_id,
@@ -204,7 +204,7 @@ class EvaluationRunner:
         event_store = self.event_bus.event_store
 
         if event_store is not None:
-            events = event_store.get_by_evaluation(
+            events = await event_store.get_by_evaluation(
                 evaluation_id,
             )
 

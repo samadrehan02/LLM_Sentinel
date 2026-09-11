@@ -25,9 +25,9 @@ class EventBus:
             [],
         ).append(handler)
 
-    def publish(self, event: Event) -> None:
+    async def publish(self, event: Event) -> None:
         if self.event_store is not None:
-            self.event_store.save(event)
+            await self.event_store.save(event)
 
         handlers = self._handlers.get(
             event.event_type,

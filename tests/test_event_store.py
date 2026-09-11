@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 
 from sentinel.instrumentation.events import Event, EventType
@@ -15,21 +16,25 @@ def create_event(evaluation_id):
     )
 
 
-def test_event_store_saves_event():
+@pytest.mark.asyncio
+async def test_event_store_saves_event():
     store = InMemoryEventStore()
     evaluation_id = uuid4()
 
     event = create_event(evaluation_id)
 
-    store.save(event)
+    await store.save(event)
 
-    events = store.get_by_evaluation(evaluation_id)
+    events = await store.get_by_evaluation(
+        evaluation_id,
+    )
 
     assert len(events) == 1
     assert events[0] == event
 
 
-def test_event_store_filters_by_evaluation():
+@pytest.mark.asyncio
+async def test_event_store_filters_by_evaluation():
     store = InMemoryEventStore()
 
     evaluation_a = uuid4()
@@ -38,18 +43,23 @@ def test_event_store_filters_by_evaluation():
     event_a = create_event(evaluation_a)
     event_b = create_event(evaluation_b)
 
-    store.save(event_a)
-    store.save(event_b)
+    await store.save(event_a)
+    await store.save(event_b)
 
-    events = store.get_by_evaluation(evaluation_a)
+    events = await store.get_by_evaluation(
+        evaluation_a,
+    )
 
     assert len(events) == 1
     assert events[0].evaluation_id == evaluation_a
 
 
-def test_event_store_returns_empty_for_unknown_evaluation():
+@pytest.mark.asyncio
+async def test_event_store_returns_empty_for_unknown_evaluation():
     store = InMemoryEventStore()
 
-    events = store.get_by_evaluation(uuid4())
+    events = await store.get_by_evaluation(
+        uuid4(),
+    )
 
     assert events == []
