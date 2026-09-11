@@ -199,7 +199,17 @@ class EvaluationRunner:
                 )
             )
 
+        events = []
+
+        event_store = self.event_bus.event_store
+
+        if event_store is not None:
+            events = event_store.get_by_evaluation(
+                evaluation_id,
+            )
+
         return EvaluationRunResult(
             evaluation=result,
             finding=finding,
+            events=events,
         )

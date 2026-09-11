@@ -9,7 +9,7 @@ from sentinel.instrumentation.events import EventType
 from sentinel.models.mock import MockModelRuntime
 from sentinel.orchestrator.runner import EvaluationRunner
 from target.agent.mock import MockTarget
-
+from sentinel.instrumentation.store import InMemoryEventStore
 
 class SuccessfulAttack(Attack):
     attack_id = "TEST-SUCCESS"
@@ -81,3 +81,31 @@ async def test_evaluation_runner():
     assert events[3].event_type == EventType.LLM_GENERATION
     assert events[4].event_type == EventType.ATTACK_EVALUATED
     assert events[5].event_type == EventType.FINDING_CREATED
+
+@pytest.mark.asyncio
+async def test_evaluation_runner_returns_persisted_events():
+    event_store = InMemoryEventStore()
+    event_bus = EventBus(event_store=event_store)
+
+    runner = EvaluationRunner(
+        model_runtime=MockModelRuntime(
+            response="Mock target response",
+        ),
+        target=MockTarget(),
+        evaluator=SimpleEvaluator(),
+        policy=BasicToolPolicy(
+            allowed_tools={"search_documents"},
+        ),
+        event_bus=event_bus,
+    )
+
+    result = await runner.run(SuccessfulAttack())
+
+    assert len(result.events) == 6
+
+    assert result.events[0].event_type == EventType.EVALUATION_STARTED
+    assert result.events[1].event_type == EventType.ATTACK_STARTED
+    assert result.events[2].event_type == EventType.AGENT_REQUEST
+    assert result.events[3].event_type == EventType.LLM_GENERATION
+    assert result.events[4].event_type == EventType.ATTACK_EVALUATED
+    assert result.events[5].event_type == EventType.FINDING_CREATED
