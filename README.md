@@ -11,12 +11,12 @@ The project focuses on the security boundary between language models, retrieval 
 
 LLM Sentinel is under active development.
 
-The current implementation provides the core evaluation pipeline, telemetry infrastructure, attack registry, runtime defense hooks, tool authorization, campaign execution, and security findings.
+The current implementation provides the core evaluation pipeline, telemetry infrastructure, attack registry, runtime defense hooks, tool authorization, campaign execution, security findings, and PostgreSQL-backed persistent telemetry.
 
 Current test status:
 
 ```text
-50 passed
+83 passed
 0 failed
 ````
 
@@ -210,6 +210,21 @@ Events contain:
 
 The telemetry layer is intended to support attack reconstruction, detection analysis, latency measurements, and future OpenTelemetry integration.
 
+### Persistent Telemetry
+
+Security events can be persisted through an asynchronous event-store abstraction backed by PostgreSQL.
+
+The current implementation provides:
+
+* PostgreSQL-backed event storage
+* Async SQLAlchemy sessions
+* Event serialization to PostgreSQL JSONB payloads
+* Querying events by evaluation ID
+* Evaluation, run, and trace identifiers
+* Integration tests against a real PostgreSQL instance
+
+The current development environment uses PostgreSQL 18 locally. The persistence layer is separated from the event bus so alternative event stores can be introduced later.
+
 ## Campaigns
 
 Individual attacks can be grouped into campaigns.
@@ -323,12 +338,14 @@ LLM_Sentinel/
 * Ruff
 * Mypy
 * AsyncIO
+* SQLAlchemy 2
+* asyncpg
+* PostgreSQL 18
 
 ### Planned
 
 * vLLM
 * llama.cpp
-* PostgreSQL
 * Qdrant
 * Redis
 * OpenTelemetry
@@ -389,6 +406,14 @@ Run the test suite:
 pytest
 ```
 
+The current integration tests expect a local PostgreSQL database named `llm_sentinel` and a `sentinel` user. Configure the connection through `.env`:
+
+```text
+SENTINEL_DATABASE_URL=postgresql+asyncpg://sentinel:sentinel@localhost:5432/llm_sentinel
+```
+
+Keep `.env` out of version control.
+
 Run linting:
 
 ```powershell
@@ -425,6 +450,9 @@ Tests currently cover:
 * Instrumented model runtimes
 * Prompt injection detection
 * Evaluation orchestration
+* Database configuration
+* PostgreSQL event persistence
+* PostgreSQL integration and round-trip behavior
 
 The target agent and attack framework are intentionally deterministic in unit tests. Model variability will be introduced during the experimental benchmarking stage.
 
@@ -447,6 +475,10 @@ The target agent and attack framework are intentionally deterministic in unit te
 * [x] Campaign execution
 * [x] Initial defense middleware
 * [x] Initial defense effectiveness evaluation
+* [x] Persistent event-store abstraction
+* [x] PostgreSQL event store
+* [x] Async database infrastructure
+* [x] PostgreSQL integration tests
 
 ### Phase 2: Security Evaluation Engine
 
