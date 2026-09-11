@@ -13,9 +13,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def create_engine(
-    database_url: str,
-) -> AsyncEngine:
+def create_engine(database_url: str) -> AsyncEngine:
     return create_async_engine(
         database_url,
         future=True,
@@ -53,3 +51,8 @@ async def drop_tables(
     await engine.run_sync(
         Base.metadata.drop_all,
     )
+
+
+# Import models after Base is defined so that all ORM tables
+# are registered with Base.metadata.
+from sentinel.infrastructure import evaluation_model, event_model  # noqa: E402, F401

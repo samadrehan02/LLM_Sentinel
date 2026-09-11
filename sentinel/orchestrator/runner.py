@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from sentinel.attacks.base import Attack
@@ -10,6 +11,7 @@ from sentinel.evaluators.result import (
 )
 from sentinel.instrumentation.event_bus import EventBus
 from sentinel.instrumentation.events import Event, EventType
+from sentinel.models.evaluation import Evaluation
 from sentinel.models.instrumented import InstrumentedModelRuntime
 from sentinel.models.runtime import ModelRuntime
 from sentinel.orchestrator.result import EvaluationRunResult
@@ -52,6 +54,13 @@ class EvaluationRunner:
             attack,
             "severity",
             "unknown",
+        )
+
+        record = Evaluation(
+            evaluation_id=evaluation_id,
+            attack_id=attack_id,
+            attack_category=attack_category,
+            target="enterprise-assistant",
         )
 
         instrumented_runtime = InstrumentedModelRuntime(
@@ -155,6 +164,10 @@ class EvaluationRunner:
                 evaluation_type=EvaluationType.ATTACK,
             )
 
+        record.status = result.status
+        record.score = result.score
+        record.completed_at = datetime.now(UTC)
+
         await self.event_bus.publish(
             Event(
                 evaluation_id=evaluation_id,
@@ -212,4 +225,5 @@ class EvaluationRunner:
             evaluation=result,
             finding=finding,
             events=events,
+            record=record,
         )
