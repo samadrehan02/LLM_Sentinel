@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sentinel.infrastructure.event_model import EventRecord
-from sentinel.instrumentation.events import Event
+from sentinel.instrumentation.events import Event, EventType
 from sentinel.instrumentation.store import EventStore
 
 
@@ -12,28 +12,13 @@ class PostgresEventStore(EventStore):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    def save(self, event: Event) -> None:
-        raise NotImplementedError(
-            "PostgresEventStore requires async persistence. "
-            "Use save_async() instead."
-        )
-
-    async def save_async(self, event: Event) -> None:
+    async def save(self, event: Event) -> None:
         record = EventRecord.from_event(event)
 
         self.session.add(record)
         await self.session.commit()
 
-    def get_by_evaluation(
-        self,
-        evaluation_id: UUID,
-    ) -> list[Event]:
-        raise NotImplementedError(
-            "PostgresEventStore requires async retrieval. "
-            "Use get_by_evaluation_async() instead."
-        )
-
-    async def get_by_evaluation_async(
+    async def get_by_evaluation(
         self,
         evaluation_id: UUID,
     ) -> list[Event]:
@@ -56,7 +41,7 @@ class PostgresEventStore(EventStore):
                 run_id=record.run_id,
                 trace_id=record.trace_id,
                 timestamp=record.timestamp,
-                event_type=record.event_type,
+                event_type=EventType(record.event_type),
                 component=record.component,
                 payload=record.payload,
                 schema_version=record.schema_version,

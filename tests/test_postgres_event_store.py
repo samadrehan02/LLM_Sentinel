@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 
 from sentinel.infrastructure.event_model import EventRecord
@@ -18,6 +19,37 @@ def create_event() -> Event:
     )
 
 
+class FakeSession:
+    def __init__(self) -> None:
+        self.added = []
+        self.committed = False
+
+    def add(self, record) -> None:
+        self.added.append(record)
+
+    async def commit(self) -> None:
+        self.committed = True
+
+    async def execute(self, statement):
+        raise NotImplementedError
+
+
+@pytest.mark.asyncio
+async def test_postgres_event_store_saves_event():
+    session = FakeSession()
+    store = PostgresEventStore(session=session)
+
+    event = create_event()
+
+    await store.save(event)
+
+    assert len(session.added) == 1
+    assert session.added[0].event_id == event.event_id
+    assert session.added[0].evaluation_id == event.evaluation_id
+    assert session.added[0].event_type == "attack.started"
+    assert session.committed is True
+
+
 def test_event_record_can_be_created_for_postgres_store():
     event = create_event()
 
@@ -32,32 +64,10 @@ def test_event_record_can_be_created_for_postgres_store():
     assert record.payload == event.payload
 
 
-def test_postgres_event_store_requires_async_save():
-    store = PostgresEventStore(session=None)
+def test_postgres_event_store_is_event_store():
+    from sentinel.instrumentation.store import EventStore
 
-    event = create_event()
+    session = FakeSession()
+    store = PostgresEventStore(session=session)
 
-    try:
-        store.save(event)
-    except NotImplementedError as exc:
-        assert "save_async" in str(exc)
-    else:
-        raise AssertionError(
-            "PostgresEventStore.save() should require async persistence."
-        )
-
-
-def test_postgres_event_store_requires_async_retrieval():
-    store = PostgresEventStore(session=None)
-
-    evaluation_id = uuid4()
-
-    try:
-        store.get_by_evaluation(evaluation_id)
-    except NotImplementedError as exc:
-        assert "get_by_evaluation_async" in str(exc)
-    else:
-        raise AssertionError(
-            "PostgresEventStore.get_by_evaluation() should require "
-            "async retrieval."
-        )
+    assert isinstance(store, EventStore)
