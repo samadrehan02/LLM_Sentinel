@@ -30,22 +30,30 @@ async def engine() -> AsyncEngine:
     await engine.dispose()
 
 
+def create_test_event(
+    evaluation_id=None,
+    event_type: EventType = EventType.TOOL_EXECUTED,
+    component: str = "integration_test",
+    payload: dict | None = None,
+) -> Event:
+    return Event(
+        evaluation_id=evaluation_id or uuid4(),
+        run_id=uuid4(),
+        trace_id=uuid4(),
+        event_type=event_type,
+        component=component,
+        payload=payload or {},
+    )
+
+
 @pytest.mark.asyncio
 async def test_postgres_event_store_round_trip(
     engine: AsyncEngine,
 ) -> None:
     session_factory = create_session_factory(engine)
 
-    evaluation_id = uuid4()
-    run_id = uuid4()
-    trace_id = uuid4()
-
-    event = Event(
-        evaluation_id=evaluation_id,
-        run_id=run_id,
-        trace_id=trace_id,
+    event = create_test_event(
         event_type=EventType.TOOL_EXECUTED,
-        component="integration_test",
         payload={
             "tool_name": "customer_lookup",
             "customer_id": "CUST-001",
@@ -59,7 +67,7 @@ async def test_postgres_event_store_round_trip(
         await store.save(event)
 
         events = await store.get_by_evaluation(
-            evaluation_id,
+            event.evaluation_id,
         )
 
     assert len(events) == 1
@@ -70,7 +78,134 @@ async def test_postgres_event_store_round_trip(
     assert persisted.evaluation_id == event.evaluation_id
     assert persisted.run_id == event.run_id
     assert persisted.trace_id == event.trace_id
-    assert persisted.event_type == EventType.TOOL_EXECUTED
-    assert persisted.component == "integration_test"
+    assert persisted.event_type == event.event_type
+    assert persisted.component == event.component
     assert persisted.payload == event.payload
-    assert persisted.schema_version == "1.0"
+    assert persisted.schema_version == event.schema_version
+
+
+@pytest.mark.asyncio
+async def test_postgres_event_store_returns_multiple_events(
+    engine: AsyncEngine,
+) -> None:
+    session_factory = create_session_factory(engine)
+    evaluation_id = uuid4()
+
+    events_to_save = [
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.EVALUATION_STARTED,
+        ),
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.ATTACK_STARTED,
+        ),
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.ATTACK_EVALUATED,
+        ),
+    ]
+
+    async with session_factory() as session:
+        store = PostgresEventStore(session)
+
+        for event in events_to_save:
+            await store.save(event)
+
+        events = await store.get_by_evaluation(
+            evaluation_id,
+        )
+
+    assert len(events) == 3
+    assert {
+        event.event_id
+        for event in events
+    } == {
+        event.event_id
+        for event in events_to_save
+    }
+
+
+@pytest.mark.asyncio
+async def test_postgres_event_store_isolates_evaluations(
+    engine: AsyncEngine,
+) -> None:
+    session_factory = create_session_factory(engine)
+
+    evaluation_a = uuid4()
+    evaluation_b = uuid4()
+
+    event_a = create_test_event(
+        evaluation_id=evaluation_a,
+        payload={"evaluation": "A"},
+    )
+    event_b = create_test_event(
+        evaluation_id=evaluation_b,
+        payload={"evaluation": "B"},
+    )
+
+    async with session_factory() as session:
+        store = PostgresEventStore(session)
+
+        await store.save(event_a)
+        await store.save(event_b)
+
+        events_a = await store.get_by_evaluation(
+            evaluation_a,
+        )
+        events_b = await store.get_by_evaluation(
+            evaluation_b,
+        )
+
+    assert len(events_a) == 1
+    assert events_a[0].payload == {"evaluation": "A"}
+
+    assert len(events_b) == 1
+    assert events_b[0].payload == {"evaluation": "B"}
+
+
+@pytest.mark.asyncio
+async def test_postgres_event_store_preserves_event_order(
+    engine: AsyncEngine,
+) -> None:
+    session_factory = create_session_factory(engine)
+    evaluation_id = uuid4()
+
+    events_to_save = [
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.EVALUATION_STARTED,
+        ),
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.ATTACK_STARTED,
+        ),
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.TOOL_REQUESTED,
+        ),
+        create_test_event(
+            evaluation_id=evaluation_id,
+            event_type=EventType.TOOL_EXECUTED,
+        ),
+    ]
+
+    async with session_factory() as session:
+        store = PostgresEventStore(session)
+
+        for event in events_to_save:
+            await store.save(event)
+
+        persisted_events = await store.get_by_evaluation(
+            evaluation_id,
+        )
+
+    assert [
+        event.event_type
+        for event in persisted_events
+    ] == [
+        EventType.EVALUATION_STARTED,
+        EventType.ATTACK_STARTED,
+        EventType.TOOL_REQUESTED,
+        EventType.TOOL_EXECUTED,
+    ]
