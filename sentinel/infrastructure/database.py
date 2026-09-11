@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
@@ -12,14 +13,18 @@ class Base(DeclarativeBase):
     pass
 
 
-def create_session_factory(
+def create_engine(
     database_url: str,
-) -> async_sessionmaker[AsyncSession]:
-    engine = create_async_engine(
+) -> AsyncEngine:
+    return create_async_engine(
         database_url,
         future=True,
     )
 
+
+def create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(
         engine,
         class_=AsyncSession,
@@ -32,3 +37,19 @@ async def get_session(
 ) -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
         yield session
+
+
+async def create_tables(
+    engine: AsyncEngine,
+) -> None:
+    await engine.run_sync(
+        Base.metadata.create_all,
+    )
+
+
+async def drop_tables(
+    engine: AsyncEngine,
+) -> None:
+    await engine.run_sync(
+        Base.metadata.drop_all,
+    )
