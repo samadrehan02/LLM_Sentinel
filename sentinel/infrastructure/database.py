@@ -51,4 +51,4 @@ async def drop_tables(engine: AsyncEngine) -> None:
         )
 
 
-from sentinel.infrastructure import evaluation_model, event_model  # noqa: E402, F401
+from sentinel.infrastructure import evaluation_model, event_model, finding_model  # noqa: E402, F401
